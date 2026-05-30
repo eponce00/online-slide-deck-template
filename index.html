@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Online Slide Deck Template</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./slides.css">
+</head>
+<body>
+  <div class="deck-shell">
+    <header class="deck-topbar">
+      <div class="deck-brand">
+        <span class="brand-dot"></span>
+        <span>Slide Deck Template</span>
+      </div>
+      <div class="deck-meta">
+        <span id="slide-counter">01 / 08</span>
+      </div>
+    </header>
+
+    <main class="deck-stage">
+      <article id="slide" class="slide" aria-live="polite"></article>
+    </main>
+
+    <footer class="deck-controls">
+      <div class="progress-track" aria-hidden="true">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+      <div class="actions">
+        <button id="prev-btn" class="action-btn" aria-label="Previous slide">Prev</button>
+        <button id="next-btn" class="action-btn primary" aria-label="Next slide">Next</button>
+        <button id="fullscreen-btn" class="action-btn" aria-label="Toggle fullscreen">⛶ Fullscreen</button>
+      </div>
+      <p class="hint">Use left and right arrow keys to navigate. Press F for fullscreen.</p>
+    </footer>
+  </div>
+
+  <div id="img-zoom-overlay" class="img-zoom-overlay" hidden>
+    <div class="img-zoom-backdrop"></div>
+    <img id="img-zoom-img" class="img-zoom-img" src="" alt="Zoomed view">
+  </div>
+
+  <div id="media-preload-bin" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none"></div>
+
+  <script type="module" src="./slides.js"></script>
+</body>
+</html>
