@@ -1,3 +1,5 @@
+import lottie from "lottie-web";
+
 const demoSvg = (label, bg = "f5f5f5", fg = "111111") =>
   `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"><rect width="1600" height="900" fill="#${bg}"/><path d="M0 720 C320 620 520 820 820 700 S1260 560 1600 680 V900 H0 Z" fill="#${fg}" opacity="0.08"/><circle cx="1240" cy="250" r="190" fill="#${fg}" opacity="0.08"/><text x="800" y="455" text-anchor="middle" dominant-baseline="middle" font-family="Inter, Arial, sans-serif" font-size="86" font-weight="700" fill="#${fg}">${label}</text></svg>`)}`;
 
@@ -41,10 +43,11 @@ const slides = [
   },
   {
     kicker: "Media",
-    title: "Media Only",
+    title: "Lottie Motion Frame",
     layout: "media-only",
     bullets: [],
-    media: [demoSvg("Full Frame Media", "e5e7eb", "111827")]
+    media: ["/animations/example-pulse.json"],
+    mediaFit: "contain"
   },
   {
     kicker: "Flow",
@@ -102,10 +105,15 @@ function isGif(path) {
   return path.toLowerCase().endsWith(".gif");
 }
 
+function isLottie(path) {
+  return path.toLowerCase().split("?")[0].endsWith(".json");
+}
+
 const mediaFallbacks = {};
 
 const preloadedMedia = new Set();
 const retainedMedia = new Map();
+const activeLottieAnimations = new Set();
 let hasStartedBackgroundPreload = false;
 
 // ── PAN / ZOOM ────────────────────────────────────────────────────────────────
@@ -240,7 +248,7 @@ function preloadMedia(path) {
 
   preloadedMedia.add(resolvedPath);
 
-  if (isVideo(resolvedPath)) {
+  if (isVideo(resolvedPath) || isLottie(resolvedPath)) {
     return;
   }
 
@@ -324,6 +332,42 @@ function preloadAllSlidesInBackground() {
 
 function markMediaReady(frame) {
   frame.classList.add("is-ready");
+}
+
+function destroyActiveLottieAnimations() {
+  activeLottieAnimations.forEach((animation) => {
+    animation.destroy();
+  });
+  activeLottieAnimations.clear();
+}
+
+function initLottieAsset(frame, asset) {
+  const src = asset.dataset.lottieSrc;
+
+  if (!src || asset.dataset.lottieBound === "true") {
+    markMediaReady(frame);
+    return;
+  }
+
+  asset.dataset.lottieBound = "true";
+
+  const animation = lottie.loadAnimation({
+    container: asset,
+    renderer: "svg",
+    loop: asset.dataset.lottieLoop !== "false",
+    autoplay: asset.dataset.lottieAutoplay !== "false",
+    path: src,
+    rendererSettings: {
+      preserveAspectRatio: "xMidYMid meet"
+    }
+  });
+
+  activeLottieAnimations.add(animation);
+  animation.addEventListener("DOMLoaded", () => markMediaReady(frame));
+  animation.addEventListener("data_failed", () => {
+    frame.classList.add("is-error");
+    markMediaReady(frame);
+  });
 }
 
 const gifReplayMsByPath = {};
@@ -551,6 +595,11 @@ function hydrateRenderedMedia(container) {
       return;
     }
 
+    if (asset.classList.contains("lottie-asset")) {
+      initLottieAsset(frame, asset);
+      return;
+    }
+
     // Try to swap in the pre-loaded retained element so media appears instantly.
     // asset.getAttribute("src") is the raw path that matches retainedMedia keys.
     const srcKey = asset.getAttribute("src");
@@ -651,6 +700,15 @@ function renderMedia(paths, options = {}) {
     .map((path) => {
       const resolvedPath = resolveMediaPath(path);
       const fallbackPath = getFallbackPath(path);
+      if (isLottie(resolvedPath)) {
+        return `
+          <div class="media-frame is-loading">
+            <div class="media-placeholder">Loading animation...</div>
+            <div class="media-asset lottie-asset" data-lottie-src="${resolvedPath}" data-lottie-loop="${options.lottieLoop === false ? "false" : "true"}" data-lottie-autoplay="${options.lottieAutoplay === false ? "false" : "true"}" aria-label="Slide animation"></div>
+          </div>
+        `;
+      }
+
       if (isVideo(resolvedPath)) {
         return `
           <div class="media-frame is-loading">
@@ -2517,6 +2575,7 @@ function renderSlide(index) {
   const current = slides[safeIndex];
   stopRobotHandshakeAnimation();
   stopTimelineMemory();
+  destroyActiveLottieAnimations();
 
   // Move any retained video/image elements that are currently inside the slide
   // back to the preload bin before innerHTML is wiped, so they stay in the DOM
