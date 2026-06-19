@@ -420,6 +420,16 @@ li.tw-li-hidden::marker {
   min-height: 0;
 }
 
+.architecture-media-grid.architecture-media-showcase {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+.architecture-showcase-frame {
+  grid-column: 1;
+  grid-row: 1;
+}
+
 .architecture-top-left-frame {
   grid-column: 1;
   grid-row: 1;
@@ -441,7 +451,8 @@ li.tw-li-hidden::marker {
 }
 
 .architecture-media-grid .media-frame img.media-asset,
-.architecture-media-grid .media-frame .media-poster {
+.architecture-media-grid .media-frame .media-poster,
+.architecture-media-grid .media-frame .lottie-asset {
   max-height: none;
   object-fit: contain;
   object-position: center center;
@@ -861,13 +872,14 @@ li.tw-li-hidden::marker {
 }
 
 .intro-media-frame {
-  width: min(100%, 480px);
-  height: min(62vh, 720px);
-  aspect-ratio: 3 / 4;
+  width: min(100%, 680px);
+  height: min(58vh, 520px);
+  aspect-ratio: 16 / 10;
 }
 
 .intro-media-frame img.media-asset,
-.intro-media-frame .media-poster {
+.intro-media-frame .media-poster,
+.intro-media-frame .lottie-asset {
   object-fit: contain;
   object-position: center center;
   max-height: none;

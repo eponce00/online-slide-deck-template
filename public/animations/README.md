@@ -15,3 +15,9 @@ Use animations in `slides.js` like this:
 ```js
 media: ["/animations/example.json"]
 ```
+
+The showcase animations in this folder are generated from:
+
+```bash
+npm run lottie:showcase
+```

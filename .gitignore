@@ -1,6 +1,8 @@
 node_modules/
 dist/
 vite-dev.log
+tmp-lottie-shots/
+tmp-lottie-shots-late/
 .DS_Store
 Thumbs.db
 

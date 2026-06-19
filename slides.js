@@ -10,7 +10,7 @@ const slides = [
     subtitle: "A portable presentation scaffold with animated layouts, media frames, and keyboard navigation.",
     layout: "intro",
     bullets: [],
-    media: [demoSvg("Opening Slide", "f7f7f2", "1b1b1b")]
+    media: ["/animations/intro-orbit.json"]
   },
   {
     kicker: "About",
@@ -46,7 +46,7 @@ const slides = [
     title: "Lottie Motion Frame",
     layout: "media-only",
     bullets: [],
-    media: ["/animations/example-pulse.json"],
+    media: ["/animations/process-flow-showcase.json"],
     mediaFit: "contain"
   },
   {
@@ -60,7 +60,7 @@ const slides = [
       "Show the new flow and proof points.",
       "Connect the work to a measurable outcome."
     ],
-    media: [demoSvg("Process Flow", "f8fafc", "0f172a")]
+    media: ["/animations/process-flow-showcase.json"]
   },
   {
     kicker: "Contribution",
@@ -74,7 +74,7 @@ const slides = [
     title: "Architecture Split",
     layout: "architecture-split",
     htmlContent: `<div class="rich-slide-content"><p><strong>Reusable Blocks:</strong></p><ul><li>Separate the story data from the rendering engine.</li><li>Keep layouts declarative and composable.</li><li>Support images, videos, embeds, and diagrams.</li></ul></div>`,
-    media: [demoSvg("Layer 1", "e0f2fe", "075985"), demoSvg("Layer 2", "dcfce7", "166534"), demoSvg("Layer 3", "fef9c3", "854d0e")],
+    media: ["/animations/architecture-signal-map.json"],
     mediaFit: "contain"
   },
   {
@@ -93,7 +93,7 @@ const slides = [
   { kicker: "Program", title: "Program Split", layout: "robot-program-split", htmlContent: `<div class="rich-slide-content robot-program-content"><p><strong>Module 1</strong></p><ul><li>Input handling</li><li>State tracking</li></ul><p><strong>Module 2</strong></p><ul><li>Rendering</li><li>Animation</li></ul></div>`, media: [demoSvg("Module A", "f1f5f9", "0f172a"), demoSvg("Module B", "fef2f2", "7f1d1d"), demoSvg("Module C", "ecfdf5", "065f46")], mediaFit: "contain" },
   { kicker: "Control", title: "Step Logic", layout: "vent-hole-clocking", htmlContent: `<div class="rich-slide-content vhc-content"><ol><li>Measure the current state.</li><li>Calculate the difference.</li><li>Apply the shortest safe move.</li><li>Verify the final state.</li></ol></div>`, media: [demoSvg("Measure", "e0f2fe", "0369a1"), demoSvg("Plan", "fef9c3", "a16207"), demoSvg("Verify", "dcfce7", "166534")], mediaFit: "contain" },
   { kicker: "Process", title: "PID Control", layout: "pid-control-split", htmlContent: `<div class="rich-slide-content pid-control-content"><ul><li>Track a setpoint.</li><li>React to feedback.</li><li>Protect against runaway conditions.</li></ul></div>`, media: [demoSvg("Trend", "f8fafc", "334155"), demoSvg("Loop", "eef2ff", "3730a3")], mediaFit: "contain" },
-  { kicker: "Impact", title: "Results and Impact", layout: "results-impact-split", htmlContent: `<div class="rich-slide-content results-impact-content"><p><strong>Result:</strong></p><ul><li>Clearer story flow.</li><li>Reusable layout system.</li><li>Portable static hosting.</li></ul></div>`, media: [demoSvg("Outcome", "f0fdf4", "14532d")], mediaFit: "contain" },
+  { kicker: "Impact", title: "Results and Impact", layout: "results-impact-split", htmlContent: `<div class="rich-slide-content results-impact-content"><p><strong>Result:</strong></p><ul><li>Clearer story flow.</li><li>Reusable layout system.</li><li>Portable static hosting.</li></ul></div>`, media: ["/animations/results-dashboard.json"], mediaFit: "contain" },
   { kicker: "Closing", title: "Thank you", layout: "closing-qna", subtitle: "Q&A", media: [] }
 ];
 function isVideo(path) {
@@ -688,6 +688,47 @@ function hydrateRenderedMedia(container) {
   });
 }
 
+function renderMediaFrame(path, options = {}, frameClass = "") {
+  const resolvedPath = resolveMediaPath(path);
+  const fallbackPath = getFallbackPath(path);
+  const className = `media-frame is-loading${frameClass ? ` ${frameClass}` : ""}`;
+
+  if (isLottie(resolvedPath)) {
+    return `
+      <div class="${className}">
+        <div class="media-placeholder">Loading animation...</div>
+        <div class="media-asset lottie-asset" data-lottie-src="${resolvedPath}" data-lottie-loop="${options.lottieLoop === false ? "false" : "true"}" data-lottie-autoplay="${options.lottieAutoplay === false ? "false" : "true"}" aria-label="Slide animation"></div>
+      </div>
+    `;
+  }
+
+  if (isVideo(resolvedPath)) {
+    return `
+      <div class="${className}">
+        <div class="media-placeholder">Loading media...</div>
+        <video class="media-asset" src="${resolvedPath}" autoplay loop muted playsinline preload="metadata"${fallbackPath ? ` poster="${fallbackPath}"` : ""}></video>
+      </div>
+    `;
+  }
+
+  if (isGif(resolvedPath) && fallbackPath) {
+    return `
+      <div class="${className}">
+        <img class="media-poster" src="${fallbackPath}" alt="Slide preview">
+        <div class="media-placeholder">Loading media...</div>
+        <img class="media-asset" src="${resolvedPath}" alt="Slide media">
+      </div>
+    `;
+  }
+
+  return `
+    <div class="${className}">
+      <div class="media-placeholder">Loading media...</div>
+      <img class="media-asset" src="${resolvedPath}" alt="Slide media">
+    </div>
+  `;
+}
+
 function renderMedia(paths, options = {}) {
   if (!paths || paths.length === 0) {
     return "";
@@ -697,44 +738,7 @@ function renderMedia(paths, options = {}) {
   const mediaFillClass = options.mediaFill ? " media-fill" : "";
 
   const mediaNodes = paths
-    .map((path) => {
-      const resolvedPath = resolveMediaPath(path);
-      const fallbackPath = getFallbackPath(path);
-      if (isLottie(resolvedPath)) {
-        return `
-          <div class="media-frame is-loading">
-            <div class="media-placeholder">Loading animation...</div>
-            <div class="media-asset lottie-asset" data-lottie-src="${resolvedPath}" data-lottie-loop="${options.lottieLoop === false ? "false" : "true"}" data-lottie-autoplay="${options.lottieAutoplay === false ? "false" : "true"}" aria-label="Slide animation"></div>
-          </div>
-        `;
-      }
-
-      if (isVideo(resolvedPath)) {
-        return `
-          <div class="media-frame is-loading">
-            <div class="media-placeholder">Loading media...</div>
-            <video class="media-asset" src="${resolvedPath}" autoplay loop muted playsinline preload="metadata"${fallbackPath ? ` poster="${fallbackPath}"` : ""}></video>
-          </div>
-        `;
-      }
-
-      if (isGif(resolvedPath) && fallbackPath) {
-        return `
-          <div class="media-frame is-loading">
-            <img class="media-poster" src="${fallbackPath}" alt="Slide preview">
-            <div class="media-placeholder">Loading media...</div>
-            <img class="media-asset" src="${resolvedPath}" alt="Slide media">
-          </div>
-        `;
-      }
-
-      return `
-        <div class="media-frame is-loading">
-          <div class="media-placeholder">Loading media...</div>
-          <img class="media-asset" src="${resolvedPath}" alt="Slide media">
-        </div>
-      `;
-    })
+    .map((path) => renderMediaFrame(path, options))
     .join("");
 
   return `<aside class="media-grid${mediaFitClass}${mediaFillClass}">${mediaNodes}</aside>`;
@@ -803,7 +807,7 @@ function renderTimelineSlide(slide) {
 }
 
 function renderIntroSlide(slide) {
-  const primaryImage = slide.media && slide.media.length > 0 ? resolveMediaPath(slide.media[0]) : "";
+  const primaryMedia = slide.media && slide.media.length > 0 ? slide.media[0] : "";
 
   return `
     <section class="intro-slide-layout">
@@ -813,10 +817,7 @@ function renderIntroSlide(slide) {
         <p class="intro-slide-subtitle">${slide.subtitle || ""}</p>
       </article>
       <aside class="intro-slide-media">
-        <div class="media-frame is-loading intro-media-frame">
-          <div class="media-placeholder">Loading media...</div>
-          <img class="media-asset" src="${primaryImage}" alt="Slide media">
-        </div>
+        ${primaryMedia ? renderMediaFrame(primaryMedia, slide, "intro-media-frame") : ""}
       </aside>
     </section>
   `;
@@ -1379,9 +1380,7 @@ function renderCodeArchitectureSlide(slide) {
 }
 
 function renderArchitectureSlide(slide) {
-  const topLeftImage = slide.media && slide.media[0] ? resolveMediaPath(slide.media[0]) : "";
-  const topRightImage = slide.media && slide.media[1] ? resolveMediaPath(slide.media[1]) : "";
-  const bottomImage = slide.media && slide.media[2] ? resolveMediaPath(slide.media[2]) : "";
+  const media = slide.media || [];
 
   return `
     <section class="section-grid architecture-layout">
@@ -1390,16 +1389,12 @@ function renderArchitectureSlide(slide) {
         <h2>${slide.title}</h2>
         ${slide.htmlContent}
       </article>
-      <aside class="architecture-media-grid">
-        <div class="media-frame architecture-top-left-frame is-loading is-ready">
-          <img class="media-asset" src="${topLeftImage}" alt="Control architecture image 1">
-        </div>
-        <div class="media-frame architecture-top-frame is-loading is-ready">
-          <img class="media-asset" src="${topRightImage}" alt="Control architecture image 2">
-        </div>
-        <div class="media-frame architecture-bottom-frame is-loading is-ready">
-          <img class="media-asset" src="${bottomImage}" alt="Control architecture image 3">
-        </div>
+      <aside class="architecture-media-grid${media.length === 1 ? " architecture-media-showcase" : ""}">
+        ${media.length === 1 ? renderMediaFrame(media[0], slide, "architecture-showcase-frame") : `
+          ${media[0] ? renderMediaFrame(media[0], slide, "architecture-top-left-frame") : ""}
+          ${media[1] ? renderMediaFrame(media[1], slide, "architecture-top-frame") : ""}
+          ${media[2] ? renderMediaFrame(media[2], slide, "architecture-bottom-frame") : ""}
+        `}
       </aside>
     </section>
   `;

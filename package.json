@@ -7,7 +7,8 @@
     "start": "vite --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "lottie:setup": "npx skills add diffusionstudio/lottie"
+    "lottie:setup": "npx skills add diffusionstudio/lottie",
+    "lottie:showcase": "node scripts/generate-showcase-lotties.mjs"
   },
   "devDependencies": {
     "vite": "^5.4.0"
